@@ -13,23 +13,34 @@
   <div id="form-container">
     <div class="upload-container">
       <span>รูปภาพสินค้า</span>
-      <div id="images-container">
-        <div v-for="(image, index) in images" :key="index" class="image-wrapper">
-          <img :src="image.src" :alt="'Uploaded Image ' + (index + 1)" />
-          <span class="remove-icon" @click="removeImage(index)">&#x2716;</span>
+      <div class="images-container" id="container-product-images">
+        <div v-for="(image, index) in images" :key="image.id" class="image-wrapper">
+          <img :src="image.src" alt="Product Image" class="uploaded-image" />
+          <span class="delete-icon" @click="removeImage(index)">x</span>
         </div>
       </div>
-      <label class="upload-icon">
-        <i class="fa-solid fa-image" @click="openFileInput"></i>
-        <input
-          type="file"
-          ref="fileInput"
-          accept="image/*"
-          @change="handleFileUpload"
-          multiple
-          style="display: none"
+
+      <div class="upload-icon-container">
+        <font-awesome-icon
+          :icon="['fas', 'image']"
+          @click="triggerFileInput('product')"
+          class="upload-icon"
         />
-      </label>
+      </div>
+
+      <input
+        type="file"
+        ref="productImageInput"
+        class="image-upload"
+        accept="image/*"
+        @change="previewImage($event, 'images')"
+        multiple
+        style="display: none"
+      />
+
+      <p id="photo-product-images-error" v-if="photoProductImagesError" style="color: red">
+        กรุณาอัพโหลดรูปภาพ
+      </p>
     </div>
 
     <div class="name-product">
@@ -43,7 +54,7 @@
 
     <div class="category-name">
       <span>หมวดหมู่</span>
-      <select v-model="category" ref="category">
+      <select v-model="category" @change="handleCategoryChange" ref="category" id="category">
         <option value="เสื้อผ้า">เสื้อผ้า</option>
         <option value="กระเป๋า">กระเป๋า</option>
         <option value="รองเท้า">รองเท้า</option>
@@ -52,7 +63,12 @@
         <option value="อาหารเครื่องดื่ม">อาหารเครื่องดื่ม</option>
         <option value="งานฝีมือ">งานฝีมือ</option>
         <option value="ความงาม">ความงาม</option>
+        <option value="อื่นๆ">อื่นๆ</option>
       </select>
+      <div v-if="category === 'อื่นๆ'" class="additional-input">
+        <label for="other-category">ระบุหมวดหมู่:</label>
+        <input type="text" id="other-category" v-model="otherCategory" />
+      </div>
     </div>
 
     <div class="details">
@@ -138,12 +154,16 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   data() {
     return {
       images: [],
+      nextImageId: 0,
       nameProduct: "",
-      category: "เสื้อผ้า",
+      category: "",
+      otherCategory: "",
       productDetails: "",
       productTypes: [
         {
@@ -159,25 +179,35 @@ export default {
     };
   },
   methods: {
-    openFileInput() {
-      this.$refs.fileInput.click();
-    },
-    handleFileUpload(event) {
-      const files = event.target.files;
-      for (const file of files) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.images.push({
-            id: `image${this.images.length + 1}`,
-            src: e.target.result,
-          });
-        };
-        reader.readAsDataURL(file);
+    triggerFileInput(inputName) {
+      const refMap = {
+        product: "productImageInput",
+      };
+      const refName = refMap[inputName];
+      const input = this.$refs[refName];
+      if (input) {
+        input.click();
       }
-      event.target.value = ""; // Reset the input field to allow uploading the same file again
+    },
+    previewImage(event) {
+      const files = event.target.files; // Get the selected files
+      Array.from(files).forEach((file) => {
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.images.push({
+              id: `image${this.nextImageId++}`, // Increment and assign ID
+              src: e.target.result,
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      
+      event.target.value = "";
     },
     removeImage(index) {
-      this.images.splice(index, 1);
+      this.images.splice(index, 1); // Remove image from list
     },
     addInputSet() {
       this.productTypes.push({
@@ -192,15 +222,23 @@ export default {
     deleteInputSet(index) {
       this.productTypes.splice(index, 1);
     },
+    handleCategoryChange() {
+      if (this.category !== 'อื่นๆ') {
+        this.otherCategory = ''; // Clear the input if not 'อื่นๆ'
+      }
+    },
     adjustTextareaHeight(textarea) {
       textarea.style.height = "auto";
       textarea.style.height = textarea.scrollHeight + 2 + "px";
     },
     prepareData() {
       const formData = {
-        images: this.images.map(img => ({ src: img.src })),
+        images: this.images.map(img => ({
+          id: img.id,
+          src: img.src })),
         nameProduct: this.nameProduct,
         category: this.category,
+        otherCategory: this.otherCategory,
         productDetails: this.productDetails,
         productTypes: this.productTypes.map(pt => ({
           productType1: pt.productType1,
@@ -211,28 +249,26 @@ export default {
           numberProducts: pt.numberProducts,
         })),
       };
-      return formData;
+      axios.post('http://localhost:8081/save-product-data', formData)
+        .then(response => {
+            console.log(response.data);
+        })
+        .catch(error => {
+            console.error('Error saving data:', error);
+        });
     },
     saveProductData() {
       const formData = this.prepareData();
       const jsonData = JSON.stringify(formData, null, 2);
-      
-      // Here you can save `jsonData` to a file or send it to a server
-      // For demonstration, let's log it to console
       console.log(jsonData);
-      
-      // Optionally, you can save it to a file using Node.js File System API
-      // Example:
-      // import fs from 'fs';
-      // fs.writeFileSync('product.json', jsonData);
-
-      // Reset form after saving
       this.resetForm();
     },
     resetForm() {
       this.images = [];
+      this.nextImageId = 0;
       this.nameProduct = "";
-      this.category = "เสื้อผ้า";
+      this.category = "";
+      this.otherCategory = "";
       this.productDetails = "";
       this.productTypes = [
         {
@@ -277,34 +313,17 @@ export default {
   flex-direction: column;
   gap: 10px;
   max-width: 100%;
-  margin: 1% auto; /* เปลี่ยน margin เป็น auto ที่เหลือเอาออก */
+  margin: 1% auto;
   background-color: #fff;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 80%; /* ปรับความกว้างให้กล่องเป็นเดิมเก่า */
-}
-
-.image-wrapper {
-  position: relative;
-  display: inline-block;
-  margin: 10px;
-  width: 150px;
-  height: 150px;
-  border: 1px solid #ccc;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  border-radius: 8px;
-}
-
-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+  width: 70%;
 }
 
 textarea {
+  border-radius: 8px;
+  padding: 10px;
   font-size: 18px;
   width: 40%;
   resize: none; /* ปิดการปรับขนาด textarea โดยไม่จำเป็น */
@@ -328,21 +347,6 @@ textarea {
 
 .remove-icon:hover {
   background: rgba(255, 72, 72, 0.5);
-}
-
-.upload-icon {
-  font-size: 50px;
-  color: #d1bb9e;
-  cursor: pointer;
-  margin-bottom: 20px;
-}
-
-.upload-icon:hover {
-  color: #a79277;
-}
-
-#image-upload {
-  display: none;
 }
 
 .upload-container span,
@@ -421,9 +425,20 @@ textarea {
 #category,
 #category option {
   width: 150px;
-  padding: 5px;
-  font-size: 15px;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 18px;
   cursor: pointer;
+}
+
+.category-name label {
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+#other-category {
+  font-size: 18px;
+  padding: 10px;
 }
 
 .btn-container {
@@ -473,6 +488,77 @@ textarea {
   text-align: center;
   color: red;
   display: none;
+}
+
+/*photo */
+.upload-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin-top: 20px;
+    position: relative;
+}
+
+.image-wrapper {
+    position: relative;
+    display: inline-block;
+    margin: 5px;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    border-radius: 8px;
+    width: 200px; /* Adjust the size as needed */
+    height: 200px; /* Adjust the size as needed */
+}
+
+.upload-icon {
+    font-size: 70px; /* Increased font size for the icon */
+    color: #888;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.upload-icon:hover {
+    color: #555;
+}
+
+.image-upload {
+  display: none;
+}
+
+.delete-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: red;
+    color: white;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 50%;
+    font-size: 14px;
+}
+
+.images-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.uploaded-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.upload-icon {
+    font-size: 50px;
+    color: #ceb398;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.upload-icon:hover {
+    color: #776451;
 }
 </style>
   

@@ -20,9 +20,16 @@ import production from './page/production.vue';
 import storecontroller from '../storecontroller';
 import accountMenu from './components/account-menu.vue';
 // import { allSettled } from 'core-js/library/es6/promise';
+import startSelling from './components/selling/start-selling.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 library.add(fas, faGoogle);
-import sellingLogin from './components/selling/selling-login.vue';
+//import sellingLogin from './components/selling/selling-login.vue';
+import FormOneSeller from './components/selling/form-one-seller.vue';
+import FormTwoSeller from './components/selling/form-two-seller.vue';
+import FormThreeSeller from './components/selling/form-three-seller.vue';
+import FormFourSeller from './components/selling/form-four-seller.vue' ;
+import salesPage from './components/selling/sales-page.vue';
+import ProductComment from './components/selling/product-comment.vue';
 const routes = [
     {
         path: '/',name: 'Homepage',component: Homepage
@@ -54,12 +61,33 @@ const routes = [
     {
         path: '/users/cart',name: 'shoppingCart',component: shoppingCart 
     },
+    // {
+    //     path: '/users/selling',name: 'sellingLogin',component: sellingLogin
+    // },
     {
-        path: '/users/selling',name: 'sellingLogin',component: sellingLogin  
+        path: '/users/startSelling',name: 'startSelling',component: startSelling
     },
     // {
     //     path: '/users/sellingProduct',name: 'sellingProduct',component: sellingProduct  
     // }
+    {
+        path: '/users/FormOneSeller',name: 'FormOneSeller',component: FormOneSeller 
+    },
+    {
+        path: '/users/FormTwoSeller',name: 'FormTwoSeller',component: FormTwoSeller
+    },
+    {
+        path: '/users/FormThreeSeller',name: 'FormThreeSeller',component: FormThreeSeller
+    },
+    {
+        path: '/users/FormFourSeller',name: 'FormFourSeller',component: FormFourSeller
+    },
+    {
+        path: '/users/salesPage',name: 'salesPage',component: salesPage
+    },
+    {
+        path: '/users/ProductComment',name: 'ProductComment',component: ProductComment
+    },
 ];
 
 const router = createRouter({

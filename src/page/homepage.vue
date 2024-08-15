@@ -1,10 +1,11 @@
 <template>
     <div class="container">
         <div class="item">
-            <!-- <CategoryComponent></CategoryComponent> -->
-            <!-- <productsrecommend></productsrecommend> -->
+            <CategoryComponent></CategoryComponent>
+            <productsrecommend></productsrecommend>
             <!-- <sellingLogin></sellingLogin> -->
-            <startSelling></startSelling>
+            <!-- startSelling></startSelling> -->
+            <!-- <FormOneSeller></FormOneSeller> -->
             <footerComponent></footerComponent>
             
         </div>
@@ -13,15 +14,17 @@
 </template>
 
 <script>
-//import productsrecommend from "../components/homepage/Product-reccomment.vue";
+import productsrecommend from "../components/homepage/Product-reccomment.vue";
 //import sellingLogin from "../components/selling/selling-login.vue";
-import startSelling from "../components/selling/start-selling.vue";
+//import startSelling from "../components/selling/start-selling.vue";
+//import FormOneSeller from "../components/selling/form-one-seller.vue";
 export default {
     name: "App",
     components: {
-        //productsrecommend,
+        productsrecommend,
         //sellingLogin,
-        startSelling,
+        //startSelling,
+        //FormOneSeller,
     },
 };
 </script>

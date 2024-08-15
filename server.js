@@ -152,6 +152,103 @@ app.post("/users/register", async (req, res) => {
 //     failureFlash: true
 // }));
 
+app.post('/users/FormOneSeller', (req, res) => {
+  res.render('form-one-seller');
+});
+
+
+app.post('/save-data', (req, res) => {
+  // const data = req.body;
+  // fs.writeFile('seller.json', JSON.stringify(data, null, 2), (err) => {
+  //     if (err) {
+  //         res.status(500).send('Error writing file');
+  //     } else {
+  //         res.send('Data saved successfully');
+  //     }
+  // });
+  try {
+    const productData = req.body;
+
+    // Write productData to product.json file
+    const filePath = path.join(__dirname, 'product.json');
+    fs.writeFile(filePath, JSON.stringify(productData, null, 2), (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Failed to save data' });
+        }
+
+        res.status(200).json({ message: 'Data saved successfully' });
+    });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Failed to save data' });
+  }
+});
+
+app.post('/users/ProductComment', (req, res) => {
+  res.render('product-comment');
+});
+
+app.post('/save-product-data', (req, res) => {
+  const data = req.body;
+  fs.writeFile('product.json', JSON.stringify(data, null, 2), (err) => {
+      if (err) {
+          res.status(500).send('Error writing file');
+      } else {
+          res.send('Data saved successfully');
+      }
+  });
+});
+
+app.use(express.json({ limit: '30mb' })); // Adjust the limit as needed
+app.use(express.urlencoded({ limit: '30mb', extended: true }));
+
+app.post('/users/salesPage', (req, res) => {
+  //res.render('sales-page');
+  fs.readFile(path.join(__dirname, 'product.json'), 'utf8', (err, jsonString) => {
+    if (err) {
+        console.log('Error reading file:', err);
+        return res.status(500).send('Error reading file');
+    }
+    try {
+        const data = JSON.parse(jsonString);
+        // ส่งข้อมูล JSON ไปหน้า sales-page
+        res.render('sales-page', { products: data});
+    } catch (err) {
+        console.log('Error parsing JSON:', err);
+        return res.status(500).send('Error parsing JSON');
+    }
+  });
+});
+
+
+
+app.post('/users/FormTwoSeller', (req, res) => {
+  //res.render('form-two-seller');
+  fs.readFile(path.join(__dirname, 'seller.json'), 'utf8', (err, jsonString) => {
+    if (err) {
+        console.log('Error reading file:', err);
+        return res.status(500).send('Error reading file');
+    }
+    try {
+        const data = JSON.parse(jsonString);
+        // ส่งข้อมูล JSON ไปหน้า form-two-seller
+        res.render('form-two-seller', { products: data});
+    } catch (err) {
+        console.log('Error parsing JSON:', err);
+        return res.status(500).send('Error parsing JSON');
+    }
+  });
+});
+
+app.post('/users/FormThreeSeller', (req, res) => {
+  res.render('form-three-seller');
+});
+
+app.post('/users/FormFourSeller', (req, res) => {
+  res.render('form-four-seller');
+});
+
 app.post("/users/login", async (req, res) => {
   const { email, password } = req.body;
   try {
